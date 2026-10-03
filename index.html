@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Arus — Personal Cashflow & Debt Planner</title>
+<meta name="description" content="Perencana arus kas & utang: simulasi strategi bayar utang per tanggal, transparan, tanpa minus.">
+<meta name="theme-color" content="#0d1526">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'self';">
+<meta name="referrer" content="no-referrer">
+<link rel="manifest" href="manifest.json">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#0d1526;color:#e8ecf8;min-height:100vh;-webkit-tap-highlight-color:transparent}
+.hero{background:radial-gradient(120% 130% at 50% 0%,#123a2e 0%,#0d1526 65%);padding:26px 18px 20px;text-align:center}
+.hero .logo{font-size:34px}
+.hero h1{font-size:24px;font-weight:800;margin:6px 0 4px}
+.hero h1 span{color:#34d399}
+.hero .sub{color:#9fb0d8;font-size:13px}
+.tabs{position:sticky;top:0;z-index:30;display:flex;background:rgba(13,21,38,.95);backdrop-filter:blur(12px);border-bottom:1px solid #1e2c4e;padding:8px;gap:6px;overflow-x:auto}
+.tabs button{flex:1;white-space:nowrap;border:none;background:#182442;color:#9fb0d8;font-size:12.5px;font-weight:700;padding:10px 8px;border-radius:10px;cursor:pointer}
+.tabs button.active{background:linear-gradient(135deg,#34d399,#059669);color:#052e1f}
+main{max-width:720px;margin:0 auto;padding:14px 14px 70px}
+.card{background:#141f3a;border:1px solid #1e2c4e;border-radius:14px;padding:15px;margin-bottom:12px}
+.card h3{font-size:15px;margin-bottom:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.kpi{flex:1;min-width:140px;background:#0f1930;border:1px solid #1e2c4e;border-radius:12px;padding:12px}
+.kpi .v{font-size:18px;font-weight:800;margin-top:4px}
+.kpi .l{font-size:11px;color:#8b98c4;text-transform:uppercase;letter-spacing:1px}
+.badge{display:inline-block;font-size:11px;font-weight:800;padding:5px 12px;border-radius:999px;letter-spacing:.5px}
+.b-lolos{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.4)}
+.b-peringatan{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.4)}
+.b-gagal{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.4)}
+.b-verifikasi{background:rgba(56,189,248,.15);color:#7dd3fc;border:1px solid rgba(56,189,248,.4)}
+.b-netral{background:rgba(139,152,196,.12);color:#9fb0d8;border:1px solid #2a3a63}
+label{display:block;font-size:12.5px;color:#9fb0d8;margin:10px 0 4px;font-weight:600}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid #24355e;border-radius:10px;background:#0f1930;color:#e8ecf8;font-size:14px;outline:none;font-family:inherit}
+input:focus,select:focus{border-color:#34d399}
+.btn{display:block;width:100%;border:none;background:linear-gradient(135deg,#34d399,#059669);color:#052e1f;font-weight:800;font-size:15px;padding:13px;border-radius:12px;cursor:pointer;margin-top:12px}
+.btn:active{transform:scale(.98)}
+.btn2{background:#1a2748;color:#e8ecf8}
+.btn-danger{background:linear-gradient(135deg,#f87171,#dc2626);color:#2a0a0a}
+.btn-sm{width:auto;display:inline-block;padding:8px 14px;font-size:13px;margin-top:8px}
+.item{background:#0f1930;border:1px solid #1e2c4e;border-radius:12px;padding:12px;margin-bottom:10px}
+.item .t{font-weight:700;font-size:14.5px}
+.item .d{font-size:12.5px;color:#8b98c4;margin-top:4px;line-height:1.6}
+.item .amt{font-size:16px;font-weight:800;color:#fff;margin-top:6px}
+.actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.actions button{border:1px solid #2a3a63;background:#182442;color:#c6d2ee;font-size:12.5px;font-weight:700;padding:8px 13px;border-radius:9px;cursor:pointer}
+table.cmp{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+table.cmp th,table.cmp td{padding:9px 8px;border-bottom:1px solid #1e2c4e;text-align:left;vertical-align:top}
+table.cmp th{color:#8b98c4;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.why{background:#0f1930;border-left:3px solid #34d399;border-radius:0 10px 10px 0;padding:12px 14px;margin-top:10px;font-size:13px;line-height:1.7;color:#c6d2ee}
+.why.warn{border-color:#f59e0b}.why.bad{border-color:#ef4444}.why.info{border-color:#38bdf8}
+.why b{color:#fff}
+ul.clean{list-style:none}
+ul.clean li{padding:7px 0;border-bottom:1px solid #1a2748;font-size:13.5px;line-height:1.6;color:#c6d2ee}
+ul.clean li:last-child{border:none}
+.muted{color:#5b6b96;font-size:12.5px;line-height:1.6}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(5,8,20,.8);display:none;align-items:flex-end;justify-content:center;z-index:100}
+.ov.open{display:flex}
+.modal{background:#16233f;border:1px solid #2a3a63;border-radius:20px 20px 0 0;max-width:600px;width:100%;padding:22px 20px 34px;max-height:92vh;overflow-y:auto;animation:up .2s}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.modal h2{font-size:18px;margin-bottom:6px}
+/* onboarding */
+#onboard{position:fixed;inset:0;z-index:200;background:#0d1526;overflow-y:auto;display:none}
+#onboard.open{display:block}
+.ob-wrap{max-width:560px;margin:0 auto;padding:28px 20px 60px}
+.ob-wrap h1{font-size:24px;margin:10px 0 6px}
+.step-dot{display:flex;gap:6px;margin:14px 0}
+.step-dot i{width:26px;height:5px;border-radius:3px;background:#24355e}
+.step-dot i.on{background:#34d399}
+footer{text-align:center;padding:22px;color:#3d4a75;font-size:12px}
+details{background:#0f1930;border:1px solid #1e2c4e;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:13px}
+details summary{cursor:pointer;font-weight:700;color:#7dd3fc}
+.xrow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.xrow input{flex:1}
+.xrow button{flex:0 0 auto}
+.del{background:#3a1620!important;border-color:#7f1d1d!important;color:#f87171!important}
+</style>
+</head>
+<body>
+
+<div id="onboard"><div class="ob-wrap" id="obBody"></div></div>
+
+<header class="hero">
+  <div class="logo">🌊</div>
+  <h1>Arus <span>• Cashflow & Debt Planner</span></h1>
+  <div class="sub">Simulasi per tanggal • Tidak boleh minus • Keputusan transparan</div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button data-t="dasbor" class="active">🏠 Dasbor</button>
+  <button data-t="utang">💳 Utang</button>
+  <button data-t="kas">💰 Kas</button>
+  <button data-t="simulasi">🧪 Simulasi</button>
+  <button data-t="profil">👤 Profil</button>
+</nav>
+
+<main>
+  <section id="s-dasbor"></section>
+  <section id="s-utang" hidden></section>
+  <section id="s-kas" hidden></section>
+  <section id="s-simulasi" hidden></section>
+  <section id="s-profil" hidden></section>
+  <section id="s-info" hidden></section>
+</main>
+
+<footer>Arus • Data tersimpan lokal di HP ini • Dibuat oleh Depa Pranata</footer>
+
+<div class="ov" id="ov"><div class="modal" id="modalBox"></div></div>
+
+<script>
+"use strict";
+/* ================= UTIL ================= */
+const $=s=>document.querySelector(s);
+const $$=s=>document.querySelectorAll(s);
+const fmtRp=n=>(n<0?"-Rp":"Rp")+Math.abs(Math.round(n)).toLocaleString("id-ID");
+const uid=()=>"x"+Math.random().toString(36).slice(2,10);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;","&gt;":"&gt;","\"":"&quot;"}[c]));
+const pad2=n=>String(n).padStart(2,"0");
+const todayStr=()=>{const d=new Date();return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());};
+const parseD=s=>{const[a,b,c]=s.split("-").map(Number);return new Date(a,b-1,c);};
+const strD=d=>d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate());
+const ymOf=d=>d.getFullYear()+"-"+pad2(d.getMonth()+1);
+const dimD=d=>new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+const NB=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+const fmtTgl=s=>{if(!s)return "-";const[a,b,c]=s.split("-").map(Number);return c+" "+NB[b-1]+" "+a;};
+const fmtYM=ym=>{const[a,b]=ym.split("-").map(Number);return NB[b-1]+" "+a;};
+const numV=id=>{const v=parseFloat(String($("#"+id).value).replace(/[^0-9.-]/g,""));return isNaN(v)?0:v;};
+</script>
+<script>
+"use strict";
+/* ================= STORE ================= */
+const DB_KEY="arus_v1";
+let DB=null;
+function loadDB(){try{DB=JSON.parse(localStorage.getItem(DB_KEY));}catch(e){DB=null;}
+  if(!DB||typeof DB!=="object")DB={};
+  DB.profile=DB.profile||null;DB.debts=DB.debts||[];DB.incomes=DB.incomes||[];
+  DB.payments=DB.payments||[];DB.strategies=DB.strategies||[];DB.saldo=DB.saldo||0;
+  if(!DB.strategies.find(s=>s.id==="base"))DB.strategies.unshift({id:"base",name:"Sesuai jadwal",extras:[],newLoan:null,builtin:true});
+}
+function save(){localStorage.setItem(DB_KEY,JSON.stringify(DB));}
+
+/* ================= ENGINE ================= */
+function debtDueOn(db,ds,day,ym,daysIn){
+  if(db.rem<=0.5||db.viaRestr)return 0;
+  if(ds<db.mulai)return 0;
+  if(day!==Math.min(db.dueDay||1,daysIn))return 0;
+  if(db.tenor&&db.dues>=db.tenor)return 0;
+  if(db.schedule==="variabel"){const v=(db.vars||[]).find(v=>v.ym===ym);return v?v.amount:0;}
+  return db.cicilan||0;
+}
+function accrue(db){
+  let intr=0;const r=(db.bungaPersen||0)/100;
+  if(db.bungaTipe==="flat")intr=db.bungaAwal*r;
+  else if(db.bungaTipe==="efektif")intr=db.rem*r;
+  if(intr>0){db.rem+=intr;db.interest=(db.interest||0)+intr;}
+  return intr;
+}
+function simulate(sid){
+  const P=DB.profile,t0s=todayStr(),t0=parseD(t0s),H=P.horizon||12;
+  const end=new Date(t0);end.setMonth(end.getMonth()+H);
+  const strat=DB.strategies.find(s=>s.id===sid)||{id:"base",name:"Sesuai jadwal",extras:[],newLoan:null};
+  const asm=[]; // asumsi
+  const debts=DB.debts.map(d=>({...d,vars:(d.vars||[]).map(v=>({...v})),rem:d.sisa,lunas:null,bungaAwal:d.sisa,interest:0,dues:0,paid:0,viaRestr:false}));
+  const byId={};debts.forEach(d=>byId[d.id]=d);
+  const skip={};DB.payments.forEach(p=>{if(p.dueDate)skip[p.debtId+"|"+p.dueDate]=true;});
+  const incByDate={};DB.incomes.forEach(i=>{(incByDate[i.date]=incByDate[i.date]||[]).push(i);});
+  if(strat.newLoan){
+    const nl=strat.newLoan;
+    debts.push({id:"nl_"+strat.id,name:nl.nama||"Pinjaman baru",sisa:nl.nominal,schedule:"flat",cicilan:nl.cicilan,vars:[],dueDay:parseD(nl.mulaiCicilan).getDate(),mulai:nl.mulaiCicilan,bungaTipe:"none",bungaPersen:0,tenor:nl.tenor||0,rem:nl.nominal,lunas:null,bungaAwal:nl.nominal,interest:0,dues:0,paid:0,viaRestr:false,isNew:true});
+    byId["nl_"+strat.id]=debts[debts.length-1];
+  }
+  let bal=DB.saldo,minBal=bal,minDate=t0s;
+  const negatives=[],shortfalls=[],breachDays=[];
+  const restrPaid=[];
+  for(let d=new Date(t0);d<end;d.setDate(d.getDate()+1)){
+    const ds=strD(d),day=d.getDate(),ym=ymOf(d),din=dimD(d);
+    // pemasukan tetap
+    if(P.incomeType!=="tidak_tetap"&&P.fixedAmt>0&&day===Math.min(P.fixedDate||1,din))bal+=P.fixedAmt;
+    // pemasukan variabel (aktual/estimasi)
+    (incByDate[ds]||[]).forEach(i=>{bal+=i.amount;if(i.kind==="estimasi")asm.push("Estimasi penghasilan "+fmtRp(i.amount)+" pada "+fmtTgl(ds)+" — asumsi, bukan data aktual.");});
+    // pencairan pinjaman baru
+    if(strat.newLoan&&ds===strat.newLoan.cair){
+      const nl=strat.newLoan,bersih=nl.nominal-(nl.potongan||0);
+      bal+=bersih;
+      (nl.lunasi||[]).forEach(id=>{const x=byId[id];if(x&&x.rem>0.5){restrPaid.push({name:x.name,amount:x.rem});x.rem=0;x.lunas=ds;x.viaRestr=true;}});
+      asm.push("Pinjaman \""+(nl.nama||"baru")+"\" cair "+fmtTgl(ds)+": terima bersih "+fmtRp(bersih)+" (potongan "+fmtRp(nl.potongan||0)+").");
+    }
+    // kebutuhan wajib
+    if(P.mandatory>0&&day===Math.min(P.mandatoryDay||1,din))bal-=P.mandatory;
+    // cicilan utang
+    for(const db of debts){
+      let amt=debtDueOn(db,ds,day,ym,din);
+      if(amt<=0)continue;
+      if(skip[db.id+"|"+ds])continue; // sudah dibayar (realisasi)
+      accrue(db);
+      if(amt>db.rem)amt=db.rem;
+      if(amt<=0)continue;
+      if(bal<amt){shortfalls.push({date:ds,name:db.name,amount:amt,kas:bal});continue;}
+      bal-=amt;db.rem-=amt;db.dues++;db.paid+=amt;
+      if(db.rem<=0.5){db.rem=0;db.lunas=ds;}
+    }
+    // extra strategi
+    (strat.extras||[]).forEach(x=>{
+      if(x.date!==ds)return;const db=byId[x.debtId];if(!db||db.rem<=0.5)return;
+      const amt=Math.min(x.amount,db.rem);
+      if(bal<amt){shortfalls.push({date:ds,name:db.name+" (extra strategi)",amount:x.amount,kas:bal});}
+      else{bal-=amt;db.rem-=amt;db.paid+=amt;if(db.rem<=0.5){db.rem=0;db.lunas=ds;}}
+    });
+    if(bal<minBal){minBal=bal;minDate=ds;}
+    if(bal<0)negatives.push({date:ds,bal});
+    if(bal<P.reserve)breachDays.push(ds);
+  }
+  // asumsi penghasilan variabel bulan depan tanpa data
+  if(P.incomeType!=="tetap"){
+    const seen={};DB.incomes.forEach(i=>{seen[ymOf(parseD(i.date))]=true;});
+    const unver=[];
+    for(let m=0;m<H;m++){const dd=new Date(t0);dd.setMonth(dd.getMonth()+m);const ym=ymOf(dd);
+      if(!seen[ym])unver.push(ym);}
+    if(unver.length){asm.push("Penghasilan tidak tetap "+unver.map(fmtYM).join(", ")+" belum ada data — diproyeksikan Rp0.");}
+    var unverIncome=unver.length>0;
+  } else var unverIncome=false;
+  // tier
+  let tier,alasan=[];
+  if(negatives.length||shortfalls.length){tier="gagal";
+    if(negatives.length){const w=negatives.reduce((a,b)=>a.bal<b.bal?a:b);alasan.push("Saldo negatif "+negatives.length+" hari. Terendah "+fmtRp(w.bal)+" pada "+fmtTgl(w.date)+".");}
+    shortfalls.forEach(s=>alasan.push("Gagal bayar "+s.name+" "+fmtRp(s.amount)+" pada "+fmtTgl(s.date)+" (kas "+fmtRp(s.kas)+")."));
+  }else if(unverIncome){tier="verifikasi";alasan.push("Proyeksi memakai asumsi penghasilan tidak tetap yang belum pasti.");}
+  else if(breachDays.length){tier="peringatan";alasan.push("Cadangan minimum "+fmtRp(P.reserve)+" tidak terjaga selama "+breachDays.length+" hari dalam proyeksi.");}
+  else{tier="lolos";alasan.push("Tidak ada saldo negatif dan semua kewajiban terjadwal terbayar.");}
+  const debtFree=debts.filter(d=>d.lunas).map(d=>d.lunas).sort().pop()||null;
+  const notFree=debts.filter(d=>d.rem>0.5);
+  return {strat,tier,alasan,minBal,minDate,negatives,shortfalls,breachDays,debtFree,notFree,
+    interest:debts.reduce((a,d)=>a+(d.interest||0),0),paid:debts.reduce((a,d)=>a+(d.paid||0),0),
+    asm,debts:debts.map(d=>({name:d.name,rem:d.rem,lunas:d.lunas,interest:d.interest||0,viaRestr:!!d.viaRestr})),restrPaid};
+}
+function tierBadge(t){return t==="lolos"?'<span class="badge b-lolos">✓ LOLOS</span>':t==="peringatan"?'<span class="badge b-peringatan">⚠ LOLOS DENGAN PERINGATAN</span>':t==="gagal"?'<span class="badge b-gagal">✗ TIDAK LOLOS</span>':'<span class="badge b-verifikasi">? PERLU VERIFIKASI</span>';}
+function tierName(t){return {lolos:"Lolos",peringatan:"Lolos dengan peringatan",gagal:"Tidak lolos",verifikasi:"Perlu verifikasi"}[t]||t;}
+</script>
+<script>
+"use strict";
+/* ================= ONBOARDING ================= */
+const PRIOS={never_minus:"Tidak pernah minus",never_minus_reserve:"Tidak pernah minus dan menjaga cadangan",debt_asap:"Melunasi utang secepat mungkin tanpa mengganggu kebutuhan wajib"};
+function showOnboard(){
+  const ob=$("#onboard");ob.classList.add("open");
+  $("#obBody").innerHTML=`
+    <div style="font-size:40px">🌊</div>
+    <h1>Selamat datang di <span style="color:#34d399">Arus</span></h1>
+    <p class="muted">Atur profil keuanganmu sekali. Arus akan menguji setiap strategi bayar utang per tanggal — bukan per bulan.</p>
+    <div class="card" style="margin-top:16px">
+      <label>Penghasilan bulanan (Rp)</label><input id="ob_amt" type="number" placeholder="cth: 2600000">
+      <label>Jenis penghasilan</label><select id="ob_type">
+        <option value="tetap">Tetap bulanan</option><option value="tidak_tetap">Tidak tetap</option><option value="gabungan">Gabungan tetap + tidak tetap</option>
+      </select>
+      <label>Tanggal penghasilan utama masuk (1–31)</label><input id="ob_date" type="number" min="1" max="31" value="1">
+      <label>Saldo kas saat ini (Rp)</label><input id="ob_saldo" type="number" placeholder="uang di tangan saat ini">
+      <label>Anggaran kebutuhan wajib per bulan (Rp)</label><input id="ob_need" type="number" placeholder="cth: 1000000">
+      <label>Target saldo cadangan minimum (Rp)</label><input id="ob_res" type="number" placeholder="cth: 1000000">
+      <label>Prioritas utama</label><select id="ob_prio">
+        <option value="never_minus">Tidak pernah minus</option>
+        <option value="never_minus_reserve">Tidak pernah minus dan menjaga cadangan</option>
+        <option value="debt_asap">Melunasi utang secepat mungkin tanpa mengganggu kebutuhan wajib</option>
+      </select>
+      <label>Horizon proyeksi (bulan)</label><select id="ob_hor"><option>6</option><option selected>12</option><option>24</option><option>36</option></select>
+      <button class="btn btn2" id="ob_contoh">Gunakan konfigurasi contoh</button>
+      <button class="btn" id="ob_save">Mulai pakai Arus →</button>
+      <p class="muted" style="margin-top:10px">Nilai contoh hanya ilustrasi — kamu bebas mengubahnya.</p>
+    </div>`;
+  $("#ob_contoh").onclick=()=>{$("#ob_amt").value=2600000;$("#ob_type").value="tetap";$("#ob_date").value=1;$("#ob_saldo").value=1500000;$("#ob_need").value=1000000;$("#ob_res").value=1000000;$("#ob_prio").value="never_minus";};
+  $("#ob_save").onclick=()=>{
+    DB.profile={incomeType:$("#ob_type").value,fixedAmt:numV("ob_amt"),fixedDate:Math.min(31,Math.max(1,parseInt($("#ob_date").value)||1)),
+      mandatory:numV("ob_need"),mandatoryDay:1,reserve:numV("ob_res"),priority:$("#ob_prio").value,horizon:parseInt($("#ob_hor").value)||12};
+    DB.saldo=numV("ob_saldo");save();ob.classList.remove("open");renderAll();
+  };
+}
+/* ================= NAV ================= */
+function nav(t){$$("#tabs button").forEach(b=>b.classList.toggle("active",b.dataset.t===t));
+  ["dasbor","utang","kas","simulasi","profil"].forEach(x=>$("#s-"+x).hidden=x!==t);window.scrollTo({top:0});}
+/* ================= DASBOR ================= */
+function upcomingDues(days){
+  const t0=parseD(todayStr()),out=[];
+  const skip={};DB.payments.forEach(p=>{if(p.dueDate)skip[p.debtId+"|"+p.dueDate]=true;});
+  for(let i=0;i<days;i++){const d=new Date(t0);d.setDate(d.getDate()+i);const ds=strD(d);
+    DB.debts.forEach(db=>{const amt=debtDueOn({...db,rem:db.sisa,viaRestr:false},ds,d.getDate(),ymOf(d),dimD(d));
+      if(amt>0&&!skip[db.id+"|"+ds])out.push({date:ds,name:db.name,amount:Math.min(amt,db.sisa),debtId:db.id});});}
+  return out.sort((a,b)=>a.date<b.date?-1:1);
+}
+function renderDasbor(){
+  const P=DB.profile,el=$("#s-dasbor");
+  const totalUtang=DB.debts.reduce((a,d)=>a+d.sisa,0);
+  const cicilanBln=DB.debts.reduce((a,d)=>a+(d.schedule==="flat"?(d.cicilan||0):0),0);
+  let simHtml="";
+  if(DB.debts.length){
+    const r=simulate("base");
+    simHtml=`<div class="card"><h3>🧪 Strategi: Sesuai jadwal ${tierBadge(r.tier)}</h3>
+      <div class="row">
+        <div class="kpi"><div class="l">Saldo terendah</div><div class="v" style="color:${r.minBal<0?"#f87171":"#fff"}">${fmtRp(r.minBal)}</div><div class="muted">${fmtTgl(r.minDate)}</div></div>
+        <div class="kpi"><div class="l">Estimasi bebas utang</div><div class="v">${r.debtFree?fmtTgl(r.debtFree):"—"}</div><div class="muted">${r.notFree.length?r.notFree.length+" belum lunas":"semua lunas"}</div></div>
+      </div>
+      <div class="actions"><button onclick="nav('simulasi')">Buka simulasi & Kenapa? →</button></div></div>`;
+  }
+  const dues=upcomingDues(14);
+  el.innerHTML=`
+    <div class="row">
+      <div class="kpi"><div class="l">💰 Saldo kas</div><div class="v">${fmtRp(DB.saldo)}</div></div>
+      <div class="kpi"><div class="l">💳 Total utang</div><div class="v" style="color:#f87171">${fmtRp(totalUtang)}</div></div>
+    </div><div style="height:10px"></div>
+    <div class="row">
+      <div class="kpi"><div class="l">📅 Cicilan flat/bln</div><div class="v">${fmtRp(cicilanBln)}</div></div>
+      <div class="kpi"><div class="l">🛡️ Cadangan target</div><div class="v">${fmtRp(P.reserve)}</div></div>
+    </div><div style="height:10px"></div>
+    ${simHtml}
+    <div class="card"><h3>⏰ Jatuh tempo 14 hari ke depan</h3>
+      ${dues.length?`<ul class="clean">${dues.map(d=>`<li><b>${esc(d.name)}</b> — ${fmtRp(d.amount)}<br><span class="muted">${fmtTgl(d.date)}</span></li>`).join("")}</ul>`:'<p class="muted">Tidak ada jatuh tempo. 🎉</p>'}
+      <div class="actions"><button onclick="nav('kas')">Tandai sudah bayar →</button></div></div>
+    <div class="card"><h3>📌 Profil aktif</h3><p class="muted">
+      Penghasilan: <b style="color:#fff">${P.incomeType==="tetap"?fmtRp(P.fixedAmt)+" (tetap, tgl "+P.fixedDate+")":P.incomeType==="tidak_tetap"?"Tidak tetap (input saat diterima)":"Gabungan"}</b><br>
+      Kebutuhan wajib: <b style="color:#fff">${fmtRp(P.mandatory)}/bln</b> • Prioritas: <b style="color:#fff">${PRIOS[P.priority]}</b> • Horizon: <b style="color:#fff">${P.horizon} bln</b></p></div>`;
+}
+/* ================= UTANG ================= */
+function renderUtang(){
+  const el=$("#s-utang");
+  el.innerHTML=`<div class="card"><h3>💳 Daftar utang (${DB.debts.length})</h3>
+    ${DB.debts.length?DB.debts.map(d=>`
+    <div class="item"><div class="t">${esc(d.name)}</div>
+      <div class="d">Sisa: <b style="color:#f87171">${fmtRp(d.sisa)}</b><br>
+      ${d.schedule==="flat"?"Cicilan flat "+fmtRp(d.cicilan)+"/bln":"Cicilan variabel per bulan"} • Jatuh tempo tgl ${d.dueDay} • Mulai ${fmtTgl(d.mulai)}<br>
+      Bunga: ${d.bungaTipe==="none"?"tanpa bunga":d.bungaTipe+" "+d.bungaPersen+"%/bln"}</div>
+      <div class="actions"><button onclick="editDebt('${d.id}')">✏️ Ubah</button><button onclick="delDebt('${d.id}')" class="del">🗑 Hapus</button></div>
+    </div>`).join(""):'<p class="muted">Belum ada utang. Tambahkan dulu biar bisa disimulasi. 🎉</p>'}
+    <button class="btn" onclick="editDebt()">+ Tambah utang</button></div>`;
+}
+function debtForm(d){
+  d=d||{name:"",sisa:0,schedule:"flat",cicilan:0,vars:[],dueDay:1,mulai:todayStr(),bungaTipe:"none",bungaPersen:0};
+  openModal(`<h2>${d.id?"✏️ Ubah":"＋ Tambah"} utang</h2>
+    <label>Nama utang</label><input id="f_name" value="${esc(d.name)}" placeholder="cth: KPR, Kartu kredit, Pinjaman koperasi">
+    <label>Sisa utang saat ini (Rp)</label><input id="f_sisa" type="number" value="${d.sisa||""}">
+    <label>Pola cicilan</label><select id="f_sched" onchange="document.querySelector('#flatBox').hidden=this.value!=='flat';document.querySelector('#varBox').hidden=this.value!=='variabel'">
+      <option value="flat"${d.schedule==="flat"?" selected":""}>Flat — sama tiap bulan</option>
+      <option value="variabel"${d.schedule==="variabel"?" selected":""}>Variabel — beda tiap bulan</option></select>
+    <div id="flatBox"${d.schedule!=="flat"?" hidden":""}><label>Cicilan per bulan (Rp)</label><input id="f_cicilan" type="number" value="${d.cicilan||""}"></div>
+    <div id="varBox"${d.schedule!=="variabel"?" hidden":""}><label>Cicilan per bulan</label><div id="varRows"></div>
+      <button class="btn btn2 btn-sm" onclick="addVarRow()">+ Tambah bulan</button>
+      <p class="muted">Isi bulan (YYYY-MM) dan nominal cicilannya. Bulan tanpa baris = tidak ada cicilan.</p></div>
+    <div class="grid2"><div><label>Tgl jatuh tempo</label><input id="f_due" type="number" min="1" max="31" value="${d.dueDay||1}"></div>
+    <div><label>Mulai cicilan</label><input id="f_mulai" type="date" value="${d.mulai||todayStr()}"></div></div>
+    <div class="grid2"><div><label>Bunga</label><select id="f_bt"><option value="none"${d.bungaTipe==="none"?" selected":""}>Tanpa bunga</option><option value="flat"${d.bungaTipe==="flat"?" selected":""}>Flat</option><option value="efektif"${d.bungaTipe==="efektif"?" selected":""}>Efektif/menurun</option></select></div>
+    <div><label>% per bulan</label><input id="f_bp" type="number" step="0.01" value="${d.bungaPersen||0}"></div></div>
+    <button class="btn" onclick="saveDebt('${d.id||""}')">Simpan</button>`);
+  const box=$("#varRows");box.innerHTML="";
+  (d.vars&&d.vars.length?d.vars:[{ym:ymOf(new Date()),amount:""}]).forEach(v=>addVarRow(v.ym,v.amount));
+}
+function addVarRow(ym,amount){
+  const div=document.createElement("div");div.className="xrow";
+  div.innerHTML=`<input type="month" value="${ym||ymOf(new Date())}" class="vr-ym"><input type="number" placeholder="Rp" value="${amount??""}" class="vr-amt"><button class="del" onclick="this.parentElement.remove()">✕</button>`;
+  $("#varRows").appendChild(div);
+}
+function editDebt(id){debtForm(id?DB.debts.find(d=>d.id===id):null);}
+function saveDebt(id){
+  const name=$("#f_name").value.trim();if(!name){alert("Isi nama utang.");return;}
+  const sched=$("#f_sched").value;
+  const vars=[];$$("#varRows .xrow").forEach(r=>{const ym=r.querySelector(".vr-ym").value,a=parseFloat(r.querySelector(".vr-amt").value);if(ym&&a>0)vars.push({ym,amount:a});});
+  const d={id:id||uid(),name,sisa:numV("f_sisa"),schedule:sched,cicilan:sched==="flat"?numV("f_cicilan"):0,vars,
+    dueDay:Math.min(31,Math.max(1,parseInt($("#f_due").value)||1)),mulai:$("#f_mulai").value||todayStr(),
+    bungaTipe:$("#f_bt").value,bungaPersen:parseFloat($("#f_bp").value)||0};
+  if(id){const i=DB.debts.findIndex(x=>x.id===id);DB.debts[i]=d;}else DB.debts.push(d);
+  save();closeModal();renderAll();
+}
+function delDebt(id){if(!confirm("Hapus utang ini? Riwayat pembayarannya ikut terhapus."))return;
+  DB.debts=DB.debts.filter(d=>d.id!==id);DB.payments=DB.payments.filter(p=>p.debtId!==id);save();renderAll();}
+</script>
+<script>
+"use strict";
+/* ================= KAS ================= */
+function renderKas(){
+  const el=$("#s-kas"),P=DB.profile;
+  const dues=upcomingDues(30);
+  const incs=[...DB.incomes].sort((a,b)=>b.date<a.date?-1:1).slice(0,20);
+  el.innerHTML=`
+  <div class="card"><h3>💰 Saldo kas saat ini</h3>
+    <div class="xrow"><input id="k_saldo" type="number" value="${DB.saldo}"><button class="btn btn-sm" style="margin:0" onclick="DB.saldo=numV('k_saldo');save();renderAll()">Simpan</button></div></div>
+  <div class="card"><h3>📥 Catat penghasilan</h3>
+    <div class="grid2"><div><label>Tanggal</label><input id="k_idate" type="date" value="${todayStr()}"></div>
+    <div><label>Nominal (Rp)</label><input id="k_iamt" type="number"></div></div>
+    ${P.incomeType!=="tetap"?`<label>Jenis</label><select id="k_ikind"><option value="aktual">Aktual — sudah diterima</option><option value="estimasi">Estimasi — perkiraan (dilabeli asumsi)</option></select>`:""}
+    <label>Catatan</label><input id="k_inote" placeholder="cth: gaji, proyek, bonus">
+    <button class="btn" onclick="addIncome()">Catat</button>
+    ${incs.length?`<ul class="clean" style="margin-top:10px">${incs.map(i=>`<li>${i.kind==="estimasi"?'<span class="badge b-verifikasi">estimasi</span> ':''}<b>${fmtRp(i.amount)}</b> — ${fmtTgl(i.date)}${i.note?" • "+esc(i.note):""} <a href="#" onclick="delIncome('${i.id}');return false" style="color:#f87171">hapus</a></li>`).join("")}</ul>`:""}
+  </div>
+  <div class="card"><h3>✅ Tandai pembayaran utang</h3>
+    <p class="muted">Cicilan yang sudah kamu bayar — tercatat sebagai realisasi, tidak dihitung dua kali di proyeksi.</p>
+    ${dues.length?dues.map((d,ix)=>`<div class="item"><div class="t">${esc(d.name)}</div><div class="d">${fmtTgl(d.date)} • ${fmtRp(d.amount)}</div>
+      <div class="actions"><button onclick="markPaid('${d.debtId}','${d.date}',${d.amount})">Sudah bayar</button></div></div>`).join(""):'<p class="muted">Tidak ada cicilan 30 hari ke depan.</p>'}
+  </div>`;
+}
+function addIncome(){
+  const amt=numV("k_iamt");if(amt<=0){alert("Isi nominal.");return;}
+  DB.incomes.push({id:uid(),date:$("#k_idate").value||todayStr(),amount:amt,kind:$("#k_ikind")?$("#k_ikind").value:"aktual",note:$("#k_inote").value.trim()});
+  DB.saldo+=amt;save();renderAll();
+}
+function delIncome(id){DB.incomes=DB.incomes.filter(i=>i.id!==id);save();renderAll();}
+function markPaid(debtId,dueDate,amount){
+  const v=prompt("Nominal yang dibayar (Rp):",amount);if(v===null)return;
+  const amt=parseFloat(v);if(!(amt>0))return;
+  const db=DB.debts.find(d=>d.id===debtId);if(!db)return;
+  db.sisa=Math.max(0,db.sisa-amt);DB.saldo-=amt;
+  DB.payments.push({id:uid(),debtId,dueDate,amount:amt,paidAt:todayStr()});
+  save();renderAll();
+}
+/* ================= SIMULASI ================= */
+function renderSimulasi(){
+  const el=$("#s-simulasi");
+  if(!DB.debts.length){el.innerHTML=`<div class="card"><p class="muted">Tambahkan utang dulu di tab 💳 Utang untuk menjalankan simulasi.</p></div>`;return;}
+  const results=DB.strategies.map(s=>({s,m:simulate(s.id)}));
+  const P=DB.profile;
+  // rekomendasi
+  const ok=results.filter(r=>r.m.tier==="lolos"||r.m.tier==="peringatan");
+  let rekom="";
+  if(!ok.length)rekom="Tidak ada strategi yang lolos. Pertimbangkan: menambah sumber dana, menggeser jadwal, atau menegosiasi kewajiban.";
+  else{
+    let pick;
+    if(P.priority==="debt_asap")pick=[...ok].sort((a,b)=>((a.m.debtFree||"9999")<(b.m.debtFree||"9999")?-1:1)||(a.m.interest-b.m.interest))[0];
+    else pick=[...ok].sort((a,b)=>b.m.minBal-a.m.minBal)[0];
+    rekom=`Rekomendasi untuk prioritas "${PRIOS[P.priority]}": <b style="color:#4ade80">${esc(pick.s.name)}</b> — saldo terendah ${fmtRp(pick.m.minBal)}${pick.m.debtFree?", estimasi bebas utang "+fmtTgl(pick.m.debtFree):""}.`;
+  }
+  el.innerHTML=`
+  <div class="card"><h3>💡 Rekomendasi mesin</h3><p style="font-size:13.5px;line-height:1.7">${rekom}</p>
+    <p class="muted" style="margin-top:8px">Mesin tidak memilih berdasarkan bunga termurah saja — melainkan kemampuan bayar per tanggal, kebutuhan wajib, cadangan, dan risiko.</p></div>
+  <div class="card"><h3>📊 Perbandingan strategi</h3>
+    <div style="overflow-x:auto"><table class="cmp"><tr><th>Strategi</th><th>Status</th><th>Saldo terendah</th><th>Bebas utang</th><th>Total bunga</th></tr>
+    ${results.map(r=>`<tr><td><b>${esc(r.s.name)}</b>${r.s.builtin?' <span class="muted">(dasar)</span>':""}</td>
+      <td>${tierBadge(r.m.tier)}</td><td>${fmtRp(r.m.minBal)}<br><span class="muted">${fmtTgl(r.m.minDate)}</span></td>
+      <td>${r.m.debtFree?fmtTgl(r.m.debtFree):'<span class="muted">belum</span>'}</td><td>${fmtRp(r.m.interest)}</td></tr>`).join("")}
+    </table></div>
+    <div class="actions"><button onclick="editStrategy()">+ Strategi baru</button></div></div>
+  ${results.map(r=>`
+  <div class="card"><h3>🧪 ${esc(r.s.name)} ${tierBadge(r.m.tier)}
+    ${r.s.builtin?"":`<span class="actions" style="margin:0"><button onclick="editStrategy('${r.s.id}')">✏️</button> <button class="del" onclick="delStrategy('${r.s.id}')">🗑</button></span>`}</h3>
+    <button class="btn btn2 btn-sm" onclick="document.querySelector('#why_${r.s.id}').hidden=!document.querySelector('#why_${r.s.id}').hidden">❓ Kenapa hasilnya ${tierName(r.m.tier).toLowerCase()}?</button>
+    <div id="why_${r.s.id}" hidden>${whyHtml(r.m)}</div></div>`).join("")}`;
+}
+function whyHtml(m){
+  const cls=m.tier==="lolos"?"":m.tier==="peringatan"?"warn":m.tier==="gagal"?"bad":"info";
+  let h=`<div class="why ${cls}">`;
+  h+=`<b>Alasan status:</b><ul class="clean">${m.alasan.map(a=>`<li>• ${esc(a)}</li>`).join("")}</ul>`;
+  h+=`<b>Fakta proyeksi:</b><ul class="clean">`;
+  h+=`<li>• Saldo terendah: <b>${fmtRp(m.minBal)}</b> pada ${fmtTgl(m.minDate)}.</li>`;
+  if(m.negatives.length)h+=`<li>• Saldo negatif pada: ${m.negatives.map(n=>fmtTgl(n.date)+" ("+fmtRp(n.bal)+")").join(", ")}.</li>`;
+  else h+=`<li>• Tidak ada saldo negatif dalam ${DB.profile.horizon} bulan proyeksi.</li>`;
+  h+=`<li>• Estimasi bebas utang: <b>${m.debtFree?fmtTgl(m.debtFree):"belum dalam periode proyeksi"}</b>${m.notFree.length?" ("+m.notFree.map(d=>esc(d.name)+": sisa "+fmtRp(d.rem)).join("; ")+")":""}.</li>`;
+  h+=`<li>• Total bunga proyeksi: <b>${fmtRp(m.interest)}</b>.</li>`;
+  m.debts.forEach(d=>{h+=`<li>• ${esc(d.name)}: ${d.lunas?"lunas "+fmtTgl(d.lunas):"sisa "+fmtRp(d.rem)}${d.viaRestr?" (via restrukturisasi)":""}.</li>`;});
+  if(m.restrPaid.length)h+=`<li>• Dilunasi via pinjaman baru: ${m.restrPaid.map(r=>esc(r.name)+" "+fmtRp(r.amount)).join(", ")}.</li>`;
+  h+=`</ul>`;
+  if(m.asm.length)h+=`<b>Asumsi yang dipakai:</b><ul class="clean">${[...new Set(m.asm)].map(a=>`<li>• ${esc(a)}</li>`).join("")}</ul>`;
+  else h+=`<p class="muted">Tidak ada asumsi — semua angka dari data yang kamu input.</p>`;
+  return h+`</div>`;
+}
+function editStrategy(id){
+  const s=id?DB.strategies.find(x=>x.id===id):{id:uid(),name:"",extras:[],newLoan:null};
+  openModal(`<h2>🧪 ${id?"Ubah":"Strategi baru"}</h2>
+    <label>Nama strategi</label><input id="s_name" value="${esc(s.name)}" placeholder="cth: Lunasi KK dulu, Restrukturisasi via KTA">
+    <h3 style="margin-top:14px;font-size:14px">⚡ Pelunasan dipercepat (opsional)</h3>
+    <div id="exRows"></div><button class="btn btn2 btn-sm" onclick="addExRow()">+ Tambah extra</button>
+    <h3 style="margin-top:14px;font-size:14px">🏦 Pinjaman baru / restrukturisasi (opsional)</h3>
+    <label><input type="checkbox" id="s_useloan" style="width:auto" ${s.newLoan?"checked":""} onchange="document.querySelector('#loanBox').hidden=!this.checked"> Sertakan pinjaman baru</label>
+    <div id="loanBox"${s.newLoan?"":" hidden"}>
+      <label>Nama pinjaman</label><input id="s_lnama" value="${esc(s.newLoan?.nama||"")}" placeholder="cth: KTA Bank X">
+      <div class="grid2"><div><label>Nominal pencairan (Rp)</label><input id="s_lnom" type="number" value="${s.newLoan?.nominal||""}"></div>
+      <div><label>Potongan/biaya (Rp)</label><input id="s_lpot" type="number" value="${s.newLoan?.potongan||0}"></div></div>
+      <div class="grid2"><div><label>Tgl pencairan</label><input id="s_lcair" type="date" value="${s.newLoan?.cair||todayStr()}"></div>
+      <div><label>Mulai cicilan</label><input id="s_lmulai" type="date" value="${s.newLoan?.mulaiCicilan||todayStr()}"></div></div>
+      <div class="grid2"><div><label>Cicilan/bln (Rp)</label><input id="s_lcic" type="number" value="${s.newLoan?.cicilan||""}"></div>
+      <div><label>Tenor (bulan)</label><input id="s_lten" type="number" value="${s.newLoan?.tenor||12}"></div></div>
+      <label>Utang yang dilunasi pinjaman ini</label>
+      ${DB.debts.map(d=>`<label style="font-weight:400"><input type="checkbox" class="s_lun" value="${d.id}" style="width:auto" ${(s.newLoan?.lunasi||[]).includes(d.id)?"checked":""}> ${esc(d.name)} (${fmtRp(d.sisa)})</label>`).join("")||'<p class="muted">Belum ada utang.</p>'}
+    </div>
+    <button class="btn" onclick="saveStrategy('${s.id}',${!!id})">Simpan strategi</button>`);
+  const box=$("#exRows");box.innerHTML="";
+  (s.extras&&s.extras.length?s.extras:[{debtId:DB.debts[0]?.id,date:todayStr(),amount:""}]).forEach(x=>addExRow(x));
+}
+function addExRow(x){
+  x=x||{debtId:DB.debts[0]?.id,date:todayStr(),amount:""};
+  const div=document.createElement("div");div.className="xrow";
+  div.innerHTML=`<select class="ex-debt">${DB.debts.map(d=>`<option value="${d.id}"${d.id===x.debtId?" selected":""}>${esc(d.name)}</option>`).join("")}</select>
+    <input type="date" class="ex-date" value="${x.date}"><input type="number" class="ex-amt" placeholder="Rp" value="${x.amount??""}">
+    <button class="del" onclick="this.parentElement.remove()">✕</button>`;
+  $("#exRows").appendChild(div);
+}
+function saveStrategy(id,isEdit){
+  const name=$("#s_name").value.trim()||"Strategi tanpa nama";
+  const extras=[];$$("#exRows .xrow").forEach(r=>{const a=parseFloat(r.querySelector(".ex-amt").value);if(a>0)extras.push({debtId:r.querySelector(".ex-debt").value,date:r.querySelector(".ex-date").value||todayStr(),amount:a});});
+  let newLoan=null;
+  if($("#s_useloan").checked){
+    const lunasi=[];$$(".s_lun:checked").forEach(c=>lunasi.push(c.value));
+    newLoan={nama:$("#s_lnama").value.trim(),nominal:parseFloat($("#s_lnom").value)||0,potongan:parseFloat($("#s_lpot").value)||0,
+      cair:$("#s_lcair").value||todayStr(),mulaiCicilan:$("#s_lmulai").value||todayStr(),
+      cicilan:parseFloat($("#s_lcic").value)||0,tenor:parseInt($("#s_lten").value)||12,lunasi};
+    if(!(newLoan.nominal>0&&newLoan.cicilan>0)){alert("Isi nominal dan cicilan pinjaman.");return;}
+  }
+  const s={id,name,extras,newLoan};
+  if(isEdit){const i=DB.strategies.findIndex(x=>x.id===id);DB.strategies[i]={...DB.strategies[i],...s};}
+  else DB.strategies.push(s);
+  save();closeModal();renderAll();
+}
+function delStrategy(id){if(!confirm("Hapus strategi ini?"))return;DB.strategies=DB.strategies.filter(s=>s.id!==id);save();renderAll();}
+</script>
+<script>
+"use strict";
+/* ================= PROFIL & INFO ================= */
+function renderProfil(){
+  const P=DB.profile,el=$("#s-profil");
+  el.innerHTML=`<div class="card"><h3>👤 Profil keuangan</h3>
+    <label>Jenis penghasilan</label><select id="p_type"><option value="tetap"${P.incomeType==="tetap"?" selected":""}>Tetap bulanan</option><option value="tidak_tetap"${P.incomeType==="tidak_tetap"?" selected":""}>Tidak tetap</option><option value="gabungan"${P.incomeType==="gabungan"?" selected":""}>Gabungan</option></select>
+    <label>Penghasilan tetap (Rp/bln)</label><input id="p_amt" type="number" value="${P.fixedAmt||""}">
+    <label>Tanggal masuk (1–31)</label><input id="p_date" type="number" min="1" max="31" value="${P.fixedDate||1}">
+    <label>Kebutuhan wajib (Rp/bln)</label><input id="p_need" type="number" value="${P.mandatory||""}">
+    <label>Cadangan minimum (Rp)</label><input id="p_res" type="number" value="${P.reserve||""}">
+    <label>Prioritas</label><select id="p_prio">${Object.entries(PRIOS).map(([k,v])=>`<option value="${k}"${P.priority===k?" selected":""}>${v}</option>`).join("")}</select>
+    <label>Horizon proyeksi (bulan)</label><select id="p_hor">${[6,12,24,36].map(h=>`<option${P.horizon===h?" selected":""}>${h}</option>`).join("")}</select>
+    <button class="btn" onclick="saveProfil()">Simpan profil</button></div>
+  <div class="card"><h3>ℹ️ Prinsip Arus</h3><ul class="clean">
+    <li>🚫 <b>Tidak boleh minus</b> — saldo negatif pada tanggal mana pun = strategi gagal.</li>
+    <li>⏰ <b>Tepat waktu</b> — kemampuan bayar diperiksa sebelum tiap jatuh tempo.</li>
+    <li>🍚 <b>Kebutuhan wajib terlindungi</b> — bukan uang bebas.</li>
+    <li>🎯 <b>Data akurat</b> — pembayaran yang sudah ditandai tidak dihitung dua kali.</li>
+    <li>🔍 <b>Tidak mengarang kepastian</b> — semua asumsi dilabeli jelas.</li>
+    <li>📆 <b>Utang terlihat sampai lunas</b> — estimasi tanggal bebas utang selalu tampil.</li>
+    <li>❓ <b>Transparan</b> — setiap hasil bisa dibuka alasannya.</li></ul></div>
+  <div class="card"><h3>💾 Backup data</h3>
+    <p class="muted">Data hanya tersimpan di HP ini. Backup berkala biar aman.</p>
+    <div class="actions"><button onclick="exportDB()">⬇ Export JSON</button><button onclick="document.querySelector('#impFile').click()">⬆ Import JSON</button></div>
+    <input type="file" id="impFile" accept=".json" hidden onchange="importDB(this)">
+    <div class="actions"><button class="del" onclick="if(confirm('Hapus SEMUA data Arus?')){localStorage.removeItem('${DB_KEY}');location.reload();}">🗑 Hapus semua data</button></div></div>`;
+}
+function saveProfil(){DB.profile={incomeType:$("#p_type").value,fixedAmt:numV("p_amt"),fixedDate:Math.min(31,Math.max(1,parseInt($("#p_date").value)||1)),
+  mandatory:numV("p_need"),mandatoryDay:1,reserve:numV("p_res"),priority:$("#p_prio").value,horizon:parseInt($("#p_hor").value)||12};save();renderAll();}
+function exportDB(){const blob=new Blob([JSON.stringify(DB)],{type:"application/json"});const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download="arus-backup-"+todayStr()+".json";a.click();}
+function importDB(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.profile)throw 0;DB=d;save();location.reload();}catch(e){alert("File tidak valid.");}};
+  r.readAsText(f);}
+/* ================= MODAL & INIT ================= */
+function openModal(html){$("#modalBox").innerHTML=html+`<button class="btn btn2" onclick="closeModal()">Tutup</button>`;$("#ov").classList.add("open");}
+function closeModal(){$("#ov").classList.remove("open");}
+$("#ov").addEventListener("click",e=>{if(e.target.id==="ov")closeModal();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+function renderAll(){renderDasbor();renderUtang();renderKas();renderSimulasi();renderProfil();}
+$$("#tabs button").forEach(b=>b.onclick=()=>nav(b.dataset.t));
+loadDB();
+if(!DB.profile)showOnboard();else renderAll();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>
